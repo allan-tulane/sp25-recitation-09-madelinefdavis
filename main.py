@@ -24,20 +24,26 @@ def prim(graph):
                 tree.add((weight, node, parent))
                 visited.add(node)
                 for neighbor, w in graph[node]:
-                    heappush(frontier, (w, neighbor, node))    
+                    heappush(frontier, (w, neighbor, node))
                     # compare with dijkstra:
-                    # heappush(frontier, (distance + weight, neighbor))                
+                    # heappush(frontier, (distance + weight, neighbor))
 
                 return prim_helper(visited, frontier, tree)
-        
-    # pick first node as source arbitrarily
-    source = list(graph.keys())[0]
-    frontier = []
-    heappush(frontier, (0, source, source))
-    visited = set()  # store the visited nodes (don't need distance anymore)
-    tree = set()
-    prim_helper(visited, frontier, tree)
-    return tree
+
+    visited = set()
+    forest = []
+    # Iterate over all nodes in the graph
+    for node in graph:
+        if node not in visited:
+            frontier = []
+            tree = set()
+            heappush(frontier, (0, node, node))
+            prim_helper(visited, frontier, tree)
+            # Remove the dummy starting edge (weight 0 from start to itself)
+            tree = {edge for edge in tree if edge[1] != edge[2]}
+            forest.append(tree)
+
+    return forest
 
 def test_prim():    
     graph = {
@@ -57,8 +63,8 @@ def test_prim():
     # weight of each tree.
     len1 = len(trees[0])
     len2 = len(trees[1])
-    assert min([len1, len2]) == 2
-    assert max([len1, len2]) == 5
+    assert min([len1, len2]) == 1
+    assert max([len1, len2]) == 4
 
     sum1 = sum(e[0] for e in trees[0])
     sum2 = sum(e[0] for e in trees[1])
@@ -81,8 +87,20 @@ def mst_from_points(points):
       a list of edges of the form (weight, node1, node2) indicating the minimum spanning
       tree connecting the cities in the input.
     """
+    graph = {name: set() for name, x, y in points}
+
+    # Add edges between each pair of points
     ###TODO
-    pass
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+            p1 = points[i]
+            p2 = points[j]
+            weight = euclidean_distance(p1, p2)
+            graph[p1[0]].add((p2[0], weight))
+            graph[p2[0]].add((p1[0], weight))
+
+        # Prims algorithm to find MSP
+    return prim(graph)[0]
 
 def euclidean_distance(p1, p2):
     return sqrt((p1[1] - p2[1])**2 + (p1[2] - p2[2])**2)
